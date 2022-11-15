@@ -23,7 +23,6 @@
 (rf/reg-event-db
  ::route
  (fn [db [_ param]]
-   (console :log "recieved route update" param)
    (assoc db ::route-match param)))
 
 ;; this contains name under :data, :name

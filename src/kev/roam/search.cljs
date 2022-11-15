@@ -1,13 +1,13 @@
 (ns kev.roam.search
   (:require
    [re-frame.loggers :refer [console]]
+   [promesa.core :as p]
    [reagent.core :as r]
    [clojure.string :as str]
    [net.cgrand.xforms :as x]
    [cljs.core.match :refer-macros [match]]
    ["@mui/material" :as mui]
-   ["fuzzysort" :as fuzzysort]
-   ))
+   ["fuzzysort" :as fuzzysort]))
 
 (defn ->child-seq [text->elem chs]
   (->> chs
@@ -62,9 +62,9 @@
 
 (defn search-box
   "general search box
-  index is a seq of maps w/ :title :text :on-select keys.
+  index is a seq of maps w/ keys :title :text :on-select
 
-  Then later, I'll chop these up and then use those I think?"
+  see `->search-targets` for how text gets chopped up and used smaller chunks to search over"
   [index]
   (r/with-let [popover-anchor (r/atom nil)
                search-results (r/atom nil)
@@ -79,16 +79,25 @@
                                                     (clj->js {:limit     500
                                                               :threshold -100
                                                               :allowTypo true
+                                                              :scoreFn (fn [[title text & _]]
+                                                                         ;; deduct from non-title match
+                                                                         (Math/max (or (and title
+                                                                                            (aget title "score"))
+                                                                                       -1000)
+                                                                                   (or (and text
+                                                                                            (- (aget text "score") 50))
+                                                                                       -1000)))
                                                               :keys      [:title :text]}))
-                                      (map (fn [{title-result 0 text-result 1 :as obj}]
-                                             (let [{:keys [id title start raw] :as obj} (js->clj (aget obj "obj")
+                                      (map (fn [{title-result 0 text-result 1 :as result}]
+                                             (let [{:keys [id title start raw] :as obj} (js->clj (aget result "obj")
                                                                                                  :keywordize-keys true)
                                                    highlight-text                       (fuzzysort-result->hiccup text-result)
                                                    text-len                             (->> highlight-text
                                                                                              count)]
                                                (merge
                                                 obj
-                                                {:text-highlight
+                                                {:score (aget result "score")
+                                                 :text-highlight
                                                  (concat
                                                   ["..." (subs raw (- start before-after-len) start)]
                                                   highlight-text
@@ -97,9 +106,11 @@
                                                                       title)}))))
                                       (group-by :title)
                                       (map (fn [[_ [best & _]]]
-                                             (console :log "best" best)
+                                             ;(console :log "best: " best)
                                              best))
-                                      (take 20))]
+                                      (take 20)
+                                      ;; re-sort bc group-by fudged it
+                                      (sort-by (comp (partial * -1) :score)))]
                      (reset! search-results
                              results)))}
      [:> mui/TextField

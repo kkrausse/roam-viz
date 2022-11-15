@@ -11,7 +11,7 @@
   (:require-macros
    [kev.roam.data-import :as data-import]))
 
-(def data-path "/db.edn")
+(def data-path (str (.-hostingAt js/window) "db.edn"))
 
 (def db
   "gets set in set-db! will contain the db for the nodes and links"

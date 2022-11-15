@@ -1,15 +1,21 @@
-project to transform local org-roam database into a nice website
+transform local org-roam database into a nice website!
 
 ** impl
-- how to handle data?
-  - make just plain edn file w/ all the node and link data
-    - it's pretty simple, so probably datascript isn't required.
-  - make datascript db in one batch, give to UI.
-    - then can mess with database and not have to worry about UI
-    - separate resource for this?
-      - then the UI can completely be a template and there is no
-    - have macro build the db as an update
-      - easier initially. updates require a recompile. That's annoying.
+*** how to handle data?
+- make just plain edn file w/ all the node and link data
+  - it's pretty simple, so probably datascript isn't required.
+- make datascript db in one batch, give to UI.
+  - then can mess with database and not have to worry about UI
+  - separate resource for this?
+    - then the UI can completely be a template and there is no
+  - have macro build the db as an update
+    - easier initially. updates require a recompile. That's annoying.
+
+- SOLUTION:
+  - datascript db stored in a separate file
+  - the ONLY user-specific thing is that file. Then I guess also the path where
+    that is. And this needs to be known by the code. will figure that out.
+
 *** roam db schemata
 #+begin_src elisp
 (defconst org-roam-db--table-schemata
@@ -66,8 +72,12 @@ project to transform local org-roam database into a nice website
       (:foreign-key [source] :references nodes [id] :on-delete :cascade)))))
 #+end_src
 ** todo
-- [ ] noticed that "sibo" node didn't show in graph.
-  Are nodes w/ no links being evicted?
+- [ ] various org features
+  - block quotes
+  - code sections
+- [ ] make reusable for other people's roam graphs
 - [ ] see https://github.com/d3/d3-force/blob/v3.0.0/README.md#forceSimulation
   to simulate collision? (like an imaginary ring surrounding the circles)
-- [ ] parse org files into posts. Router for posts.
+- [X] parse org files into posts. Router for posts.
+  - tried doing the existing parser. This didn't work.
+- [X] noticed that "sibo" node didn't show in graph. Are nodes w/ no links being evicted?

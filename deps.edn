@@ -55,9 +55,10 @@
                                  "--interactive" "--color"]}}
            :build {:exec-fn   kev.dev/build
                    :exec-args {:app          :app
+                               :roam-db-path "./docs/db.edn"
                                ;; this assumes the we are hosted at /blog
                                :release-opts {:config-merge [;; for cli compatibility this must be a list
-                                                             {:output-dir  "docs/js"
-                                                              :asset-path  "/blog/js"
+                                                             {:output-dir   "docs/js"
+                                                              :asset-path   "/roam-viz/js"
                                                               :build-hooks [(shadow.cljs.build-report/hook
                                                                              {:output-to "report.html"})]}]}}}}}

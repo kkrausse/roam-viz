@@ -16,7 +16,7 @@
       rel="stylesheet"
       href="https://fonts.googleapis.com/css?family=Roboto%20Mono:300,400,500,700&display=swap"
       />
-    <title>Kevin's Blog</title>
+    <title>Kevin's Roam</title>
     <!-- Import Ionicon icons & Google Fonts our Bootstrap theme relies on -->
     <!-- <link rel="stylesheet" href="//code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css" type="text/css"> -->
     <!-- <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Titillium+Web:700|Source+Serif+Pro:400,700|Merriweather+Sans:400,700|Source+Sans+Pro:400,300,600,700,300italic,400italic,600italic,700italic" type="text/css"> -->
@@ -26,7 +26,11 @@
   </head>
   <body>
     <div id="app"></div>
+
+    <!-- change src and window.hostingAt for prod build! -->
     <script src="/js/main.js" type="text/javascript"></script>
-    <script src="/blog/js/main.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      window.hostingAt = "/";
+    </script>
   </body>
 </html>

@@ -3,7 +3,7 @@
    [nrepl.cmdline]
    [shadow.cljs.devtools.api :as shadow.api]
    [shadow.cljs.devtools.server :as shadow.server]
-
+   [kev.roam.data-import :as data-import]
    [shadow.cljs.devtools.cli :as shadow.cli]
    ))
 
@@ -11,6 +11,12 @@
 
   (prn "wut")
   (shadow-watch!)
+  (require '[shadow.cljs.devtools.api :as shadow.api]
+           '[shadow.cljs.devtools.server :as shadow.server])
+  (shadow.server/start!)
+  (shadow.api/compile :app)
+  (shadow.api/watch :app)
+  (shadow.api/nrepl-select :app)
   )
 
 (defn shadow-watch! []
@@ -26,7 +32,11 @@
 (defn build
   "release-opts will by passsed into shadow. These are essentially the same
   as shadow cli options."
-  [{:keys [app release-opts]}]
+  [{:keys [app roam-db-path release-opts]}]
+  ;; write the roam db
+  (assert roam-db-path "should have roam-db-path specified!")
+  (data-import/write-datascript-db! roam-db-path)
+  ;; call shadow
   (shadow.api/release! app release-opts))
 
 
