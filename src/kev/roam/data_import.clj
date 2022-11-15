@@ -7,6 +7,8 @@
    [datascript.core :as d]
    ))
 
+(def jdbc-url "jdbc:sqlite:/Users/kevinkrausse/.emacs.d/.local/cache/org-roam.db")
+
 ;; TODO: how can we make this extensible to others' configurations?
 ;; maybe they want a custom query
 (defn all-links-with-source-nodes
@@ -52,9 +54,6 @@ AND (links.dest != '\"id\"' OR links.dest in (select id from usable_nodes))
   (subs s
         (if (= (first s) \") 1 0)
         (if (= (last s) \") (dec (count s)) (count s))))
-
-(def jdbc-url "jdbc:sqlite:/Users/kevinkrausse/.emacs.d/.local/cache/org-roam.db")
-
 
 (defn power-law-step
   [links id->vals]
