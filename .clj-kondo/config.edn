@@ -1,0 +1,2 @@
+{:skip-comments true
+ :lint-as {reagent.core/with-let clojure.core/let}}

@@ -1,0 +1,27 @@
+{
+  "name": "browser",
+  "version": "1.0.0",
+  "description": "some sol dickaround",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@babel/core": "^7.0.0-0",
+    "@babel/runtime": "^7.16.7",
+    "@emotion/react": "^11.7.1",
+    "@emotion/styled": "^11.6.0",
+    "@fontsource/roboto": "^4.5.1",
+    "@mui/icons-material": "^5.2.5",
+    "@mui/material": "^5.2.8",
+    "d3": "^7.6.1",
+    "fuzzysort": "^1.1.4",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  },
+  "devDependencies": {
+    "shadow-cljs": "^2.16.12"
+  }
+}

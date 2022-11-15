@@ -1,0 +1,17 @@
+{:source-paths
+ ["src"]
+
+ :deps {:aliases [:cljs]}
+
+ :builds
+ {:app {:target     :browser
+        :output-dir "public/js"
+        :asset-path "/js"
+        :js-options {:js-provider :shadow}
+        :modules    {:main {:init-fn kev.roam.core/init}}
+        :compiler-options {#_#_:output-feature-set :es5
+                           :optimizations      :simple
+                           :externs ["datascript/externs.js"]}
+        :devtools   {:http-root "public"
+                     :http-port 8020}
+        :build-hooks [#_(kev.blog.dev/compile-posts)]}}}
