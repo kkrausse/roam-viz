@@ -67,90 +67,90 @@
   see `->search-targets` for how text gets chopped up and used smaller chunks to search over"
   [index]
   (r/with-let [popover-anchor (r/atom nil)
-               search-results (r/atom nil)
-               search-targets (clj->js (->search-targets index))
-               before-after-len 40]
-    [:> mui/Box
-     {:on-change (fn [e]
-                   (swap! popover-anchor #(or % (.-target e)))
-                   (let [search  (.. e -target -value)
-                         results (->> (fuzzysort/go search
-                                                    search-targets
-                                                    (clj->js {:limit     500
-                                                              :threshold -100
-                                                              :allowTypo true
-                                                              :scoreFn (fn [[title text & _]]
+               search-results (r/atom nil)]
+    (let [search-targets   (clj->js (->search-targets index))
+          before-after-len 40]
+      [:> mui/Box
+       {:on-change (fn [e]
+                     (swap! popover-anchor #(or % (.-target e)))
+                     (let [search  (.. e -target -value)
+                           results (->> (fuzzysort/go search
+                                                      search-targets
+                                                      (clj->js {:limit     500
+                                                                :threshold -100
+                                                                :allowTypo true
+                                                                :scoreFn (fn [[title text & _]]
                                                                          ;; deduct from non-title match
-                                                                         (Math/max (or (and title
-                                                                                            (aget title "score"))
-                                                                                       -1000)
-                                                                                   (or (and text
-                                                                                            (- (aget text "score") 50))
-                                                                                       -1000)))
-                                                              :keys      [:title :text]}))
-                                      (map (fn [{title-result 0 text-result 1 :as result}]
-                                             (let [{:keys [id title start raw] :as obj} (js->clj (aget result "obj")
-                                                                                                 :keywordize-keys true)
-                                                   highlight-text                       (fuzzysort-result->hiccup text-result)
-                                                   text-len                             (->> highlight-text
-                                                                                             count)]
-                                               (merge
-                                                obj
-                                                {:score (aget result "score")
-                                                 :text-highlight
-                                                 (concat
-                                                  ["..." (subs raw (- start before-after-len) start)]
-                                                  highlight-text
-                                                  [(subs raw start (+ start text-len before-after-len)) "..."])
-                                                 :title-highlight (or (seq (fuzzysort-result->hiccup title-result))
-                                                                      title)}))))
-                                      (group-by :title)
-                                      (map (fn [[_ [best & _]]]
+                                                                           (Math/max (or (and title
+                                                                                              (aget title "score"))
+                                                                                         -1000)
+                                                                                     (or (and text
+                                                                                              (- (aget text "score") 50))
+                                                                                         -1000)))
+                                                                :keys      [:title :text]}))
+                                        (map (fn [{title-result 0 text-result 1 :as result}]
+                                               (let [{:keys [id title start raw] :as obj} (js->clj (aget result "obj")
+                                                                                                   :keywordize-keys true)
+                                                     highlight-text                       (fuzzysort-result->hiccup text-result)
+                                                     text-len                             (->> highlight-text
+                                                                                               count)]
+                                                 (merge
+                                                  obj
+                                                  {:score (aget result "score")
+                                                   :text-highlight
+                                                   (concat
+                                                    ["..." (subs raw (- start before-after-len) start)]
+                                                    highlight-text
+                                                    [(subs raw start (+ start text-len before-after-len)) "..."])
+                                                   :title-highlight (or (seq (fuzzysort-result->hiccup title-result))
+                                                                        title)}))))
+                                        (group-by :title)
+                                        (map (fn [[_ [best & _]]]
                                              ;(console :log "best: " best)
-                                             best))
-                                      (take 20)
+                                               best))
+                                        (take 20)
                                       ;; re-sort bc group-by fudged it
-                                      (sort-by (comp (partial * -1) :score)))]
-                     (reset! search-results
-                             results)))}
-     [:> mui/TextField
-      {:variant "standard"
-       :size    "small"
-       :label   "search"}]
-     [:div
-      [:> mui/Popover
-       {:anchor-origin      {:vertical   "bottom"
-                             :horizontal "center"}
-        :transform-origin   {:vertical "top"
-                             :horizontal "left"}
-        :sx                 {:width "100%"
-                             :max-height "90%"} ;; this bc it covers the search box!
-        :id                 "simple-popover"
-        :disable-auto-focus true
-        :on-close           #(reset! popover-anchor nil)
-        :anchor-el          @popover-anchor
-        :open               (boolean (and @popover-anchor (seq @search-results)))}
-       [:> mui/List
-        {:sx {:width "100%"}}
-        (map-indexed
-         (fn [i {:keys [text-highlight title-highlight post-id on-select]}]
-           ^{:key i}
-           [:> mui/ListItemButton
-            {:sx       {}
-             :on-click (fn [_]
-                         (reset! popover-anchor nil)
-                         (on-select))}
-            [:> mui/Box
-             {:sx {:m 1}}
-             [:> mui/Typography
-              {:variant   "h5"
-               :component "div"}
-              (->child-seq #(do [:span %])
-                           title-highlight)]
-             [:> mui/Typography
-              {:gutter-bottom true
-               :component     "div"
-               :variant       "subtitle1"}
-              (->child-seq #(do [:span %])
-                           text-highlight)]]])
-         @search-results)]]]]))
+                                        (sort-by (comp (partial * -1) :score)))]
+                       (reset! search-results
+                               results)))}
+       [:> mui/TextField
+        {:variant "standard"
+         :size    "small"
+         :label   "search"}]
+       [:div
+        [:> mui/Popover
+         {:anchor-origin      {:vertical   "bottom"
+                               :horizontal "center"}
+          :transform-origin   {:vertical "top"
+                               :horizontal "left"}
+          :sx                 {:width "100%"
+                               :max-height "90%"} ;; this bc it covers the search box!
+          :id                 "simple-popover"
+          :disable-auto-focus true
+          :on-close           #(reset! popover-anchor nil)
+          :anchor-el          @popover-anchor
+          :open               (boolean (and @popover-anchor (seq @search-results)))}
+         [:> mui/List
+          {:sx {:width "100%"}}
+          (map-indexed
+           (fn [i {:keys [text-highlight title-highlight post-id on-select]}]
+             ^{:key i}
+             [:> mui/ListItemButton
+              {:sx       {}
+               :on-click (fn [_]
+                           (reset! popover-anchor nil)
+                           (on-select))}
+              [:> mui/Box
+               {:sx {:m 1}}
+               [:> mui/Typography
+                {:variant   "h5"
+                 :component "div"}
+                (->child-seq #(do [:span %])
+                             title-highlight)]
+               [:> mui/Typography
+                {:gutter-bottom true
+                 :component     "div"
+                 :variant       "subtitle1"}
+                (->child-seq #(do [:span %])
+                             text-highlight)]]])
+           @search-results)]]]])))
