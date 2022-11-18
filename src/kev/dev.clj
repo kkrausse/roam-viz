@@ -29,13 +29,14 @@
  ;;(shadow.api/nrepl-select :app)
   )
 
+(defn build-roam-db [{:keys [roam-db-path]}]
+  (assert roam-db-path "should have roam-db-path specified!")
+  (data-import/write-datascript-db! roam-db-path))
+
 (defn build
   "release-opts will by passsed into shadow. These are essentially the same
   as shadow cli options."
   [{:keys [app roam-db-path release-opts]}]
-  ;; write the roam db
-  (assert roam-db-path "should have roam-db-path specified!")
-  (data-import/write-datascript-db! roam-db-path)
   ;; call shadow
   (shadow.api/release! app release-opts))
 

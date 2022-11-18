@@ -53,9 +53,10 @@
                                 ["--middleware"
                                  "[shadow.cljs.devtools.server.nrepl/middleware,cider.nrepl/cider-middleware]"
                                  "--interactive" "--color"]}}
+           :roam-db {:exec-fn kev.dev/build-roam-db
+                     :exec-args {:roam-db-path "./docs/db.edn"}}
            :build {:exec-fn   kev.dev/build
                    :exec-args {:app          :app
-                               :roam-db-path "./docs/db.edn"
                                ;; this assumes the we are hosted at /blog
                                :release-opts {:config-merge [;; for cli compatibility this must be a list
                                                              {:output-dir   "docs/js"

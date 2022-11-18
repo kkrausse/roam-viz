@@ -6,7 +6,9 @@ transform local org-roam database into a nice website!
   your org-roam database optimally. I have a custom query with some exclusions
   currently.
 - update docs/index.html to use your currect db path (near bottom of file)
-- run =clj -X:cljs:build= to produce build in docs.
+- run =clj -X:cljs:roam-db= to create the roam db (update deps.edn alias to
+  output to correct path).
+- run =clj -X:cljs:build= to compile the clojurescript for prod
 ** impl
 *** how to handle data?
 - make just plain edn file w/ all the node and link data
