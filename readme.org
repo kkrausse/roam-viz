@@ -82,6 +82,7 @@ transform local org-roam database into a nice website!
 #+end_src
 ** todo
 - [ ] various org features
+  - make max-width for post text. Look at blog for doing this.
   - block quotes
   - code sections
 - [ ] make reusable for other people's roam graphs
