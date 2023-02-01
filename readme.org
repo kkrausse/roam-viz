@@ -6,9 +6,10 @@ transform local org-roam database into a nice website!
   your org-roam database optimally. I have a custom query with some exclusions
   currently.
 - update docs/index.html to use your currect db path (near bottom of file)
-- run =clj -X:cljs:roam-db= to create the roam db (update deps.edn alias to
-  output to correct path).
+- build roam db
+  =clj -X:cljs:roam-db= update deps.edn alias to output to correct path.
 - run =clj -X:cljs:build= to compile the clojurescript for prod
+- repl: cider-jack-in-clj&cljs =clj -X:cljs=
 ** impl
 *** how to handle data?
 - make just plain edn file w/ all the node and link data
@@ -83,8 +84,8 @@ transform local org-roam database into a nice website!
 ** todo
 - [ ] various org features
   - make max-width for post text. Look at blog for doing this.
-  - block quotes
   - code sections
+  - [X] block quotes
 - [ ] make reusable for other people's roam graphs
 - [ ] see https://github.com/d3/d3-force/blob/v3.0.0/README.md#forceSimulation
   to simulate collision? (like an imaginary ring surrounding the circles)

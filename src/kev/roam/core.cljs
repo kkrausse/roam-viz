@@ -37,8 +37,9 @@
   (createTheme
    (clj->js
     ;; see https://fonts.google.com/ for options
-    {:typography {:fontFamily "Roboto Mono"
-                  :body1      {:fontSize "0.9rem"}} ; note: change index.html to download your font
+    {:typography {:fontFamily "Lora" ; note: change index.html to download your font
+                  :fontWeight 400
+                  :fontStyle "normal"}
      :palette    {:mode       :light
                   #_#_#_#_
                   :text       {:primary   "#e0e0e0"

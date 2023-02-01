@@ -67,7 +67,7 @@
    "keto")
 
 
-  (d/q '[:find [[pull ?e [:node/title :node/id]] ...]
+  (d/q '[:find [[pull ?e [:node/title :node/id :node/created]] ...]
          :in $ ?title
          :where [?e :node/title ?title]]
        db

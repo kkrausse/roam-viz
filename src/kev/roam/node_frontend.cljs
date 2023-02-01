@@ -14,9 +14,6 @@
 
 (comment
 
-  (prn "what")
-
-
   (:node/title
                   (kev.roam.data/find-node-by
                    kev.roam.data/db
@@ -126,15 +123,31 @@
      :find-idx 1
      :find-fn (comp second rest)}
     {:name :props-start
-     :re #":PROPERTIES:"}
+     :re #"(:PROPERTIES:)"}
+    {:name :props-end
+     :re #"(:END:)"}
+    {:name :begin-block
+     :re #"(#\+begin_(\S+)(?:\s(\S*))*?)\n"
+     :find-fn (comp (partial into []) rest rest)
+     :find-idx 0}
+    {:name :end-block
+     :re #"(#\+end_(\S+).*?)\n"
+     :find-fn #(get % 2)
+     :find-idx 1}
     {:name :newline
      :re #"\n"}
     ]))
 
 (tokenize-org
 "
-Here is a sample with _underlining text_ and _more_ with =code= and also /with
-italics and/
+** Regulation of antibacterial defense in the small intestine by the nuclear bile acid receptor
+:PROPERTIES:
+:ID:       e22d1b38-9b0c-46df-ac70-f9fe028527e7
+:END:
+found via [[id:919e9425-207e-45b9-9ab8-891fd455f7f4][Berberine Directly Affects the Gut Microbiota to Promote Intestinal Farnesoid X Receptor Activation]]
+
+https://pubmed.ncbi.nlm.nih.gov/16473946/
+https://sci-hub.se/10.1073/pnas.0509592103
 "
  )
 
@@ -231,13 +244,34 @@ and* something
 
       :else (recur t (conj filtered h)))))
 
+(defn group-blocks [tokenized]
+  (loop [[h & t]   tokenized
+         grouped   []]
+    (match h
+      [:begin-block [type & params]]
+      (let [[new-t inner]
+            (loop [[h & t] t
+                   inner []]
+              (match h
+                [:end-block type] [t inner]
+                nil   [t inner]
+                :else (recur t (conj inner h))))]
+        (recur new-t (conj grouped [:block type params inner])))
+      nil grouped
+      :else (recur t (conj grouped h)))))
+
+(defn preprocess [tokenized]
+  (-> tokenized
+      filter-linebreaks
+      group-blocks))
+
 (defn tokenized->hiccup [tokenized]
   (loop [[h & t] tokenized
          hiccup  []]
     (cond
       (and (empty? hiccup)
            (nil? h) (nil? t)) [:br]
-      (nil? h) [:div (auto-id hiccup)]
+      (nil? h) (auto-id hiccup)
       :else
       (match h
         [:lead-space indent-count]
@@ -277,10 +311,24 @@ and* something
                                  "****" :h4
                                  "*****" :h5) text]))
 
-        [:props-start _] (let [[_ [_ & no-props-tail]] (split-with #(match % [:title-line _] false :else true)
-                                                                   t)]
-                           (recur no-props-tail hiccup))
+        [:props-start _] (recur (->> t
+                                     (drop-while
+                                      #(match %
+                                              [:props-end _] false
+                                              :else  true))
+                                     (drop 1))
+                                hiccup)
         [:title-line _] (recur t hiccup)
+
+        [:block type params content]
+        (recur t (conj hiccup
+                       [:> mui/Box
+                        {:sx {:background-color "grey.300"
+                              :padding-left 2}}
+                        [:> mui/Box
+                         {:sx {:background-color "grey.200"
+                               :padding 1}}
+                         [:em (tokenized->hiccup content)]]]))
 
         [& s] (recur t (conj hiccup [:span (pr-str h)]))
 
@@ -288,12 +336,15 @@ and* something
         (recur t (conj hiccup [:span h]))))))
 
 (defn org->hiccup [text]
-  [:div (->> text
-             tokenize-org
-             filter-linebreaks
-             tokenized->hiccup
-             ;(#(with-out-str (cljs.pprint/pprint %)))
-             )])
+  [:> mui/Box
+   {:sx {:max-width "65ch"
+         :width     "100%"}}
+   (->> text
+        tokenize-org
+        preprocess
+        ;(#(with-out-str (cljs.pprint/pprint %)))
+        tokenized->hiccup
+        )])
 
 (defn node-page
   "looks up the node by title (bc that's what we're using as the path parameter)
@@ -302,15 +353,15 @@ and* something
   [:div
    [kev.search/search-box
     (->> (d/q '[:find [[pull ?e [:node/title :node/id :node/content]] ...]
-              :where [?e :node/title ?title]
-              [?e :node/content ?content]]
+                :where [?e :node/title ?title]
+                [?e :node/content ?content]]
               db)
-       (map (fn [{:node/keys [title content]}]
-              {:title title
-               :text content
-               :on-select (fn [_]
-                            (console :log "selected" title)
-                            (rfe/push-state :route/node {:title title}))})))]
+         (map (fn [{:node/keys [title content]}]
+                {:title title
+                 :text content
+                 :on-select (fn [_]
+                              (console :log "selected" title)
+                              (rfe/push-state :route/node {:title title}))})))]
    [:> mui/Box {:sx {:display "flex"
                      :justify-content "space-between"}}
     [:> mui/Box

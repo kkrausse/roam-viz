@@ -78,7 +78,9 @@ AND (links.dest != '\"id\"' OR links.dest in (select id from usable_nodes))
   (let [links-to (filter #(= id (:target %)) links)]
     (reduce +)))
 
-(require '[clojure.string :as str])
+(defn roam-file-name->time-string [fname]
+  (second (re-matches #".*/(\d{14})-.*" fname)))
+
 (defn ->nodes+links []
   (let [links+source (all-links-with-source-nodes jdbc-url)
         nodes (->> links+source
@@ -114,6 +116,7 @@ AND (links.dest != '\"id\"' OR links.dest in (select id from usable_nodes))
                       (map (fn [[k {:keys [file] :as v}]]
                              [k
                               (assoc v
+                                     :created-time (roam-file-name->time-string file)
                                      :value
                                      (id->val k)
                                      :content
@@ -123,7 +126,7 @@ AND (links.dest != '\"id\"' OR links.dest in (select id from usable_nodes))
 
 (defn write-datascript-db!
   "writes datascript db to specified output-path. w/ attributes
-  :node/{value|content|title|id}
+  :node/{created|value|content|title|id}
   :link/{source|target}
   This will be used by the UI to make the site"
   [output-path]
@@ -135,6 +138,7 @@ AND (links.dest != '\"id\"' OR links.dest in (select id from usable_nodes))
                      (map (fn [[_ v]]
                             (set/rename-keys v
                                              {:value   :node/value
+                                              :created-time :node/created
                                               :content :node/content
                                               :title   :node/title
                                               :id      :node/id})))
@@ -200,10 +204,8 @@ AND (links.dest != '\"id\"' OR links.dest in (select id from usable_nodes))
 
 
 
-
-
   (let [ds (jdbc/get-datasource {:jdbcUrl jdbc-url})]
-    (jdbc/execute! ds ["
+    (->> (jdbc/execute! ds ["
 with
 usable_nodes
 as (select * from nodes
@@ -221,11 +223,15 @@ as (select * from nodes
     and INSTR(nodes.title, 'ekata') <= 0
 )
 select * from usable_nodes
-where id = '\"dc4f2b75-b7e5-4db6-ba2c-c1bf01a42453\"'
-"]))
-
-
-  (all-links-with-source-nodes jdbc-url)
+join files on files.file = usable_nodes.file
+where id = '\"13a39de3-44c1-4116-bb39-cbaac1768828\"'
+"])
+         (map #(update % :files/mtime
+                       (fn [x]
+                         (let [[high low _ _] (read-string x)]
+                           (java.time.Instant/ofEpochSecond
+                            (+ (* high (Math/pow 2 16))
+                                                 low))))))))
 
   ;; does the whole shebang from the db
   (write-datascript-db! "./public/db.edn")
