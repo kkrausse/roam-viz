@@ -15,8 +15,7 @@
    ["d3" :as d3]
    ["@mui/material" :as mui]
    ["@mui/material/CssBaseline" :default CssBaseline]
-   ["@mui/material/styles" :refer [createTheme]]
-   )
+   ["@mui/material/styles" :refer [createTheme]])
   (:require-macros
    [kev.roam.util :as util]))
 

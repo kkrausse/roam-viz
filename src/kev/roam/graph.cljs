@@ -146,8 +146,6 @@
                                          (aset e "subject" "fy" nil))))))]
     svg))
 
-(sqlite-import/defnodes+links)
-
 (comment
   (get nodes "a262f204-b467-4012-beeb-fca8a629d0aa")
 
@@ -156,7 +154,7 @@
          (into []
                (take 5)
                "taco boom"))
-  (keys nodes)
+
   (->> links
        (filter (fn [{:keys [source target]}]
                  (or #_(not (contains? nodes source))
@@ -189,11 +187,11 @@ return re_frame.loggers.console.cljs$core$IFn$_invoke$arity$variadic(new cljs.co
                                     {:source s
                                      :target t})
                                  (range 1)))
-            nodes (vals nodes)]
+            nodes (vals nodes')]
         (graph-simulation! {:svg (reagent.dom/dom-node this)
                             :width 2400 :height 1600
                             :nodes (clj->js nodes)
-                            :links (clj->js links)})))
+                            :links (clj->js links')})))
     :render (fn []
               [:svg {"xmlns:xhtml" "http://www.w3.org/1999/xhtml"
                      "xmlnsXlink" "http://www.w3.org/1999/xlink"

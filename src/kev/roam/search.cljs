@@ -71,7 +71,8 @@
     (let [search-targets   (clj->js (->search-targets index))
           before-after-len 40]
       [:> mui/Box
-       {:on-change (fn [e]
+       {:sx {:mb 1}
+        :on-change (fn [e]
                      (swap! popover-anchor #(or % (.-target e)))
                      (let [search  (.. e -target -value)
                            results (->> (fuzzysort/go search

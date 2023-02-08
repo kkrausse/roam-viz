@@ -1,15 +1,14 @@
 transform local org-roam database into a nice website!
 
 ** running
-- update =kev.roam.data-import/jdbc-url= to point to your org roam database.
-- optionally update =kev.roam.data-import/all-links-with-source-nodes= to query
-  your org-roam database optimally. I have a custom query with some exclusions
-  currently.
-- update docs/index.html to use your currect db path (near bottom of file)
-- build roam db
-  =clj -X:cljs:roam-db= update deps.edn alias to output to correct path.
-- run =clj -X:cljs:build= to compile the clojurescript for prod
 - repl: cider-jack-in-clj&cljs =clj -X:cljs=
+- build roam db:
+  - =clj -X:cljs:roam-db= update deps.edn alias to output to correct path.
+  - update =kev.roam.data-import/jdbc-url= to point to your org roam database.
+- compile cljs: =clj -X:cljs:build=
+- optionally update =kev.roam.data-import/all-links-with-source-nodes= to query
+  your org-roam database. I have a custom query with some custom exclusions.
+- update docs/index.html to use your currect db path (near bottom of file)
 ** impl
 *** how to handle data?
 - make just plain edn file w/ all the node and link data

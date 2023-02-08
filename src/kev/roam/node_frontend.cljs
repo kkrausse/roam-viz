@@ -14,10 +14,10 @@
 
 (comment
 
-  (:node/title
+  (:nodes/title
                   (kev.roam.data/find-node-by
                    kev.roam.data/db
-                   :node/id "b77d4578-bc50-42a8-94c4-b11d27f78837"))
+                   :nodes/id "b77d4578-bc50-42a8-94c4-b11d27f78837"))
 
   (let [link [:link
               [:link-ext
@@ -28,10 +28,10 @@
       [:link-ext-id id]
       (rfe/href :route/node
                 {:title
-                 (:node/title
+                 (:nodes/title
                   (kev.roam.data/find-node-by
                    kev.roam.data/db
-                   :node/id id))})
+                   :nodes/id id))})
       :else  ::unknown)))
 
   )
@@ -48,12 +48,12 @@
    '[:find [?backlink-title ...]
     :in $ ?node-title
     :where
-    [?node :node/title ?node-title]
-    [?node :node/id ?node-id]
+    [?node :nodes/title ?node-title]
+    [?node :nodes/id ?node-id]
     [?e :link/target ?node-id]
     [?e :link/source ?backlink-id]
-    [?backlink-node :node/id ?backlink-id]
-    [?backlink-node :node/title ?backlink-title]]
+    [?backlink-node :nodes/id ?backlink-id]
+    [?backlink-node :nodes/title ?backlink-title]]
   db
   node-title))
 
@@ -172,10 +172,10 @@ and* something
   (if-let [[_ id] (re-matches #"^id:(\S+)$" link)]
     (rfe/href :route/node
               {:title
-               (:node/title
+               (:nodes/title
                 (kev.roam.data/find-node-by
                  kev.roam.data/db
-                 :node/id id))})
+                 :nodes/id id))})
     link))
 
 (defn split-tokens-newline [ts]
@@ -346,46 +346,54 @@ and* something
         tokenized->hiccup
         )])
 
-(defn node-page
-  "looks up the node by title (bc that's what we're using as the path parameter)
-  and renders it"
-  [db node-title]
-  [:div
-   [kev.search/search-box
-    (->> (d/q '[:find [[pull ?e [:node/title :node/id :node/content]] ...]
-                :where [?e :node/title ?title]
-                [?e :node/content ?content]]
-              db)
-         (map (fn [{:node/keys [title content]}]
-                {:title title
-                 :text content
-                 :on-select (fn [_]
-                              (console :log "selected" title)
-                              (rfe/push-state :route/node {:title title}))})))]
-   [:> mui/Box {:sx {:display "flex"
-                     :justify-content "space-between"}}
-    [:> mui/Box
-     {:sx {:display "flex" :flex-direction "column"}}
-     [:h1 node-title]
-     #_[:a {:href (rfe/href :route/home)} "home"]]
-    [:> mui/Box
+(defn backlinks [db node-title]
+  [:> mui/Box
      {:sx {:display "flex"
            :flex-direction "column"
+           :flex-wrap "wrap"
            :background-color "grey.200"
-           :max-width "50%"
+           :align-self "flex-start"
+           :max-width "40em"
+           :mt 1
            :p 1
            ;:justify-content "space-around"
            :height "100%"}
       :component "span"}
      [:b "Backlinks:"]
-     (->> (query-backlinks db node-title)
-          (filter #(not= "home" %))
-          (into ["home"])
-          (map
-           (fn [backlink-title]
-             [:a {:href (rfe/href :route/node {:title backlink-title})}
-              backlink-title]))
-          (auto-id))]]
-   (some->> (kev.roam.data/find-node-by db :node/title node-title)
-            :node/content
+   [:> mui/Box
+    {:sx {:display "flex"
+           :flex-direction "column"
+           :flex-wrap "wrap"
+           :align-self "flex-start"}}
+    (->> (query-backlinks db node-title)
+         (map
+          (fn [backlink-title]
+            [:> mui/Link {:sx {} :href (rfe/href :route/node {:title backlink-title})}
+             backlink-title]))
+         (auto-id))]])
+
+(defn node-page
+  "looks up the node by title (bc that's what we're using as the path parameter)
+  and renders it"
+  [db node-title]
+  [:> mui/Box
+   [kev.search/search-box
+    (->> (d/q '[:find [[pull ?e [:nodes/title :nodes/id :nodes/content]] ...]
+                :where [?e :nodes/title ?title]
+                [?e :nodes/content ?content]]
+              db)
+         (map (fn [{:nodes/keys [title content]}]
+                {:title title
+                 :text content
+                 :on-select (fn [_]
+                              (console :log "selected" title)
+                              (rfe/push-state :route/node {:title title}))})))]
+   [:> mui/Link {:sx {:mt 3} :href (rfe/href :route/home)} "home"]
+   [backlinks db node-title]
+   [:> mui/Box
+    {:sx {:display "flex"
+          :flex-direction "column"}}
+    [:h1 node-title]]
+   (some->> (kev.roam.data/find-node-by db :nodes/title node-title)
+            :nodes/content
             org->hiccup)])

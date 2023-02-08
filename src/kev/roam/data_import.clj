@@ -26,14 +26,18 @@
 with
 usable_nodes
 as (select * from nodes as use_nodes where
+
+   -- ignore any pages linking to private, ekata, or taxbit
+   -- or those with 'ekata' in the title
     not exists (
         select * from links
         inner join nodes as dest ON dest.id=links.dest
         where -- source is node specified
         links.source=use_nodes.id and
         (
-        -- dest is anything ekata or private...
+        -- dest is anything ekata, taxbit, or private...
         INSTR(dest.title, 'ekata') > 0
+        or INSTR(dest.title, 'taxbit') > 0
         or dest.title = '\"private\"'
         )
     )
@@ -84,15 +88,23 @@ AND (links.dest != '\"id\"' OR links.dest in (select id from usable_nodes))
 (defn ->nodes+links []
   (let [links+source (all-links-with-source-nodes jdbc-url)
         nodes (->> links+source
-                   (map #(select-keys % [:nodes/title :nodes/id :nodes/file]))
                    (filter (comp some? :nodes/id))
-                   (map (fn [{:nodes/keys [title id file]}]
+                   (map (fn [{id :nodes/id :as x}]
                           [(remove-quotes id)
-                           {:title (remove-quotes title)
-                            :id (remove-quotes id)
-                            :file (remove-quotes file)}]))
-                   ;; filter out dailies
-                   (filter (fn [[_ {:keys [title]}]]
+                           (-> x
+                               (update :nodes/properties
+                                       (fn [props]
+                                         (prn props)
+                                         (->> props
+                                              read-string
+                                              (map (fn [[k _dot v]]
+                                                     [k v]))
+                                              (into {}))))
+                               (update :nodes/title remove-quotes)
+                               (update :nodes/id remove-quotes)
+                               (update :nodes/file remove-quotes))]))
+                   ;; filter out dailies--unfortunate, but less so than using regex in sqlite
+                   (filter (fn [[_ {:nodes/keys [title]}]]
                              (nil? (re-find #"^[0-9]{4}-[0-9]{2}-[0-9]{2}$" title))))
                    (into {}))
         links (->> links+source
@@ -113,14 +125,12 @@ AND (links.dest != '\"id\"' OR links.dest in (select id from usable_nodes))
                  (into {} (map (fn [[k v]] [k 1])) nodes)
                  (range 2))
         nodes   (into {}
-                      (map (fn [[k {:keys [file] :as v}]]
+                      (map (fn [[k {:nodes/keys [file] :as v}]]
                              [k
                               (assoc v
-                                     :created-time (roam-file-name->time-string file)
-                                     :value
-                                     (id->val k)
-                                     :content
-                                     (slurp file))]))
+                                     :nodes/created-time (roam-file-name->time-string file)
+                                     :nodes/value (id->val k)
+                                     :nodes/content (slurp file))]))
                       nodes)]
     [nodes links]))
 
@@ -135,13 +145,12 @@ AND (links.dest != '\"id\"' OR links.dest in (select id from usable_nodes))
           (-> (d/empty-db)
               (d/db-with
                (into []
-                     (map (fn [[_ v]]
-                            (set/rename-keys v
-                                             {:value   :node/value
-                                              :created-time :node/created
-                                              :content :node/content
-                                              :title   :node/title
-                                              :id      :node/id})))
+                     (map #(select-keys (second %)
+                                        [:nodes/content
+                                         :nodes/id
+                                         :nodes/title
+                                         :nodes/value
+                                         :nodes/properties]))
                      nodes))
               (d/db-with
                (into []
@@ -226,12 +235,20 @@ select * from usable_nodes
 join files on files.file = usable_nodes.file
 where id = '\"13a39de3-44c1-4116-bb39-cbaac1768828\"'
 "])
+         (map (fn [{props :nodes/properties :as r}]
+                (assoc r :props
+                       (->> props
+                            read-string
+                            (map (fn [[k _dot v]]
+                                   [k v]))
+                            (into {})))))
          (map #(update % :files/mtime
                        (fn [x]
                          (let [[high low _ _] (read-string x)]
                            (java.time.Instant/ofEpochSecond
                             (+ (* high (Math/pow 2 16))
-                                                 low))))))))
+                               low))))))))
+
 
   ;; does the whole shebang from the db
   (write-datascript-db! "./public/db.edn")

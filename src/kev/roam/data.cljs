@@ -38,7 +38,7 @@
 
 (defn find-node-by [db attr value]
   (first
-   (d/q '[:find [[pull ?e [:node/title :node/id :node/content]]]
+   (d/q '[:find [[pull ?e [:nodes/title :nodes/id :nodes/content]]]
           :in $ ?attr ?value
           :where [?e ?attr ?value]]
         db
@@ -47,37 +47,35 @@
 
 (comment
 
-  (d/q '[:find [[pull ?e [:node/title :node/id]]]
-         :where [?e :node/title _]]
+  (d/q '[:find [[pull ?e [:nodes/title :nodes/id :nodes/properties]]]
+         :where [?e :nodes/title _]]
        db)
 
-  ;; => [#:node{:id "6927c0a1-4bfd-476f-bf81-a6644bc09394",
-  ;;            :title "on lisp paul graham"}]
 
   (set-db!)
 
   (kev.roam.data/find-node-by
    db
-   :node/id
+   :nodes/id
    "b77d4578-bc50-42a8-94c4-b11d27f78837")
 
   (kev.roam.data/find-node-by
    db
-   :node/title
+   :nodes/title
    "keto")
 
 
-  (d/q '[:find [[pull ?e [:node/title :node/id :node/created]] ...]
+  (d/q '[:find [[pull ?e [:nodes/title :nodes/id :nodes/created]] ...]
          :in $ ?title
-         :where [?e :node/title ?title]]
+         :where [?e :nodes/title ?title]]
        db
        "metformin")
 
-  (d/q '[:find [[pull ?e [:node/title :node/id ]] ...]
+  (d/q '[:find [[pull ?e [:nodes/title :nodes/id ]] ...]
           :in $ ?attr ?value
           :where [?e ?attr ?value]]
         db
-        :node/title
+        :nodes/title
         "metformin")
 
 
