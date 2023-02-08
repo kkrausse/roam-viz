@@ -94,7 +94,6 @@ AND (links.dest != '\"id\"' OR links.dest in (select id from usable_nodes))
                            (-> x
                                (update :nodes/properties
                                        (fn [props]
-                                         (prn props)
                                          (->> props
                                               read-string
                                               (map (fn [[k _dot v]]
