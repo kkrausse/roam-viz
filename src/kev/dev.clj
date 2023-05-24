@@ -9,13 +9,16 @@
 
 (comment
 
-  (prn "wut")
+  ;; rebuild db, dev version
+  (build-roam-db {:roam-db-path "./public/db.edn"})
+
   (shadow-watch!)
   (require '[shadow.cljs.devtools.api :as shadow.api]
            '[shadow.cljs.devtools.server :as shadow.server])
   (shadow.server/start!)
   (shadow.api/compile :app)
   (shadow.api/watch :app)
+  ;; don't run this, as it will switch the repl type
   (shadow.api/nrepl-select :app)
   )
 

@@ -63,14 +63,13 @@
     (condp = name
       :route/node   [node-frontend/node-page kev-db node-title]
       :route/graph  [:> mui/Box
-                    {:m 1.5}
-                    [graph/node-graph "not actually passing data yet"]]
+                     {:m 1.5}
+                     [graph/node-graph kev-db]]
       :route/home   [node-frontend/node-page kev-db "home"]
       [:div "not found!"])))
 
 (defn ^:dev/after-load render! []
 ;;;  (rf/dispatch-sync [:core/init])
-
   (-> (kev.roam.data/set-db!)
       (p/then (fn [_] (console :log "loaded db!"))))
 

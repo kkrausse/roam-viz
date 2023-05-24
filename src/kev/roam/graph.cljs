@@ -3,14 +3,16 @@
    [reagent.core]
    [re-frame.loggers :refer [console]]
    [reitit.frontend.easy :as rfe]
+   [datascript.core :as d]
    [reagent.dom]
-   ["d3" :as d3])
+   ["d3" :as d3]
+   [re-frame.db :as db])
   (:require-macros
    [kev.roam.util :as util]
    [kev.roam.data-import :as sqlite-import]))
 
 (defn graph-simulation!
-  "nodes of format [{:id 'x :title 'something-cool :link 'link}]
+  "nodes of format [{:id 'x :title 'something-cool :value 23}]
    links of format [{:source 'x :target 'y}]
   where 'x and 'y are the same type"
   [{:keys [svg width height nodes links]}]
@@ -146,52 +148,52 @@
                                          (aset e "subject" "fy" nil))))))]
     svg))
 
+(defn remove-ns-keys [m]
+  (into {}
+    (map (fn [[k v]]
+           [(keyword (name k)) v]))
+    m))
+
 (comment
   (get nodes "a262f204-b467-4012-beeb-fca8a629d0aa")
 
-  (substr)
-  (apply str
-         (into []
-               (take 5)
-               "taco boom"))
 
   (->> links
        (filter (fn [{:keys [source target]}]
                  (or #_(not (contains? nodes source))
                   (not (contains? nodes target))))))
 
-  (console :log
-           (str (fn taco [e]
-                  (prn "wut?")
-                  (console :log
-                           "clicked"
-                           e))))
+  (require '[kev.roam.data :refer [db]])
 
-"(function kev$roam$graph$graph_simulation_BANG__$_taco(e){
-cljs.core.prn.cljs$core$IFn$_invoke$arity$variadic(cljs.core.prim_seq.cljs$core$IFn$_invoke$arity$2(["wut?"], 0));
+  (->> db
+       (d/q '[:find [[pull ?e [*]] ...]
+          :where [?e :link/source _]])
+       (map remove-ns-keys)
+       first)
 
-return re_frame.loggers.console.cljs$core$IFn$_invoke$arity$variadic(new cljs.core.Keyword(null,"log","log",-1595516004),cljs.core.prim_seq.cljs$core$IFn$_invoke$arity$2(["clicked",e], 0));
+  "(function kev$roam$graph$graph_simulation_BANG__$_taco(e){
+cljs.core.prn.cljs$core$IFn$_invoke$arity$variadic(cljs.core.prim_seq.cljs$core$IFn$_invoke$arity$2([" wut? "], 0));
+
+return re_frame.loggers.console.cljs$core$IFn$_invoke$arity$variadic(new cljs.core.Keyword(null," log "," log ",-1595516004),cljs.core.prim_seq.cljs$core$IFn$_invoke$arity$2([" clicked ",e], 0));
 })();"
   )
 
-(defn node-graph [data]
+(defn node-graph [db]
   (reagent.core/create-class
    {:component-did-mount
     (fn [this]
-      (let [num-nodes  2
-        nodes'      (clj->js (map #(do {:id %}) (range num-nodes)))
-        links'      (clj->js (map #(let [s (rand-int num-nodes)
-                                        t (loop []
-                                            (let [x (rand-int num-nodes)]
-                                              (if (= s x) (recur) x)))]
-                                    {:source s
-                                     :target t})
-                                 (range 1)))
-            nodes (vals nodes')]
+      (let [links (->> db
+                       (d/q '[:find [[pull ?e [*]] ...]
+                              :where [?e :link/source _]])
+                       (map remove-ns-keys))
+            nodes (->> db
+                       (d/q '[:find [[pull ?e [:nodes/title :nodes/id :nodes/value]] ...]
+                          :where [?e :nodes/title _]])
+                       (map remove-ns-keys))]
         (graph-simulation! {:svg (reagent.dom/dom-node this)
                             :width 2400 :height 1600
                             :nodes (clj->js nodes)
-                            :links (clj->js links')})))
+                            :links (clj->js links)})))
     :render (fn []
               [:svg {"xmlns:xhtml" "http://www.w3.org/1999/xhtml"
                      "xmlnsXlink" "http://www.w3.org/1999/xlink"

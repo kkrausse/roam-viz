@@ -47,10 +47,9 @@
 
 (comment
 
-  (d/q '[:find [[pull ?e [:nodes/title :nodes/id :nodes/properties]]]
+  (d/q '[:find [[pull ?e [:nodes/title :nodes/id :nodes/properties]] ...]
          :where [?e :nodes/title _]]
        db)
-
 
   (set-db!)
 
