@@ -1,11 +1,14 @@
 transform local org-roam database into a nice website!
 
 ** running
-- repl: cider-jack-in-clj&cljs =clj -X:cljs=
-- build roam db:
-  - =clj -X:cljs:roam-db= update deps.edn alias to output to correct path.
-  - update =kev.roam.data-import/jdbc-url= to point to your org roam database.
-- compile cljs: =clj -X:cljs:build=
+- repl: cider-jack-in-clj&cljs =clj -M:cljs=
+- build dev roam db:
+  - =clj -X:build-db=  override by adding =:roam-db-path '"/path/to/your/org-roam.db"'= path.
+- build prod db & compile cljs:
+  #+begin_src bash
+clj -X:build-db :db-out-path '"./docs/db.edn"'
+clj -X:cljs:compile
+  #+end_src
 - optionally update =kev.roam.data-import/all-links-with-source-nodes= to query
   your org-roam database. I have a custom query with some custom exclusions.
 - update docs/index.html to use your currect db path (near bottom of file)

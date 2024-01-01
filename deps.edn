@@ -1,65 +1,48 @@
-{:paths ["src" "resources"]
- :deps  {org.clojure/clojure  {:mvn/version "1.11.1"}
-         thheller/shadow-cljs {:mvn/version "2.16.12"}
-         com.google.javascript/closure-compiler-unshaded {:mvn/version "v20211006"}
+{:paths   ["src" "resources"]
+ :deps    {org.clojure/clojure               {:mvn/version "1.11.1"}
+           ;; com.google.javascript/closure-compiler-unshaded {:mvn/version "v20211006"}
            ;; common libs
-         net.cgrand/xforms                               {:mvn/version "0.19.2"}
-         funcool/promesa                                 {:git/url "https://github.com/funcool/promesa"
-                                                          :sha     "147c15974484a4f3634e6ad095217806dbb58ee4"}
-         com.wsscode/async                               {:git/url "https://github.com/wilkerlucio/wsscode-async"
-                                                          :sha     "163b1cf5c9963d4c798aed4018461abdee754a1d"}
-         com.wsscode/promesa-bridges                     {:git/url "https://github.com/wilkerlucio/promesa-bridges"
-                                                          :sha     "9439859ef0f517a1b9e453620c0eb72fba896f9e"}
-         lambdaisland/classpath                          {:git/url "https://github.com/lambdaisland/classpath"
-                                                          :sha     "ff96d4f07d5b12b2fe0d8b206eb4a3713ad222d6"}
-
-         org.clojure/core.match {:mvn/version "1.0.0"}
-         org.clojure/spec.alpha {:mvn/version "0.3.214"}
-         ;; for parsing org files! https://github.com/200ok-ch/org-parser
-         org-parser/org-parser {:mvn/version "0.1.27"}
-        ;; db shite
-         com.github.seancorfield/next.jdbc {:mvn/version "1.2.796"}
-         org.xerial/sqlite-jdbc            {:mvn/version "3.39.2.1"}
-         ;; logging?
-         ch.qos.logback/logback-classic {:mvn/version "1.4.1"}
-         io.pedestal/pedestal.log {:mvn/version "0.5.10"}
-         org.slf4j/slf4j-api {:mvn/version "2.0.3"}
-         ;; datascript!
-         datascript/datascript {:git/url "https://github.com/tonsky/datascript"
-                                :sha     "e8ba04fe790ef162bc3ed953cd033530c5075c40"}
-         }
-
- :aliases {:cljs   {:extra-deps {org.clojure/clojurescript {:mvn/version "1.10.914"}
-                                 cider/cider-nrepl         {:mvn/version "0.26.0"}
-                                 ;; frontend routing
-                                 metosin/reitit-frontend {:mvn/version "0.5.18"}
-                                 ;; custom chrome formatter. preloaded w/ shadow
-                                 binaryage/devtools      {:mvn/version "1.0.6"}
-
-                                 kibu/pushy              {:mvn/version "0.3.8"}
-
-                                  ;; libs
-                                 cljs-http/cljs-http {:mvn/version "0.1.46"}
-                                 re-frame/re-frame   {:mvn/version "1.3.0-rc2"}
-                                 reagent/reagent     {:git/url "https://github.com/reagent-project/reagent"
-                                                      :sha     "b71fc361b85338ef4e4cd52a7b21e0f3f3f89628"}}
-                    :main-opts ["-m" "nrepl.cmdline"
-                                "--middleware"
-                                 "[shadow.cljs.devtools.server.nrepl/middleware,cider.nrepl/cider-middleware]"
-                                 "--interactive" "--color"]
-                    ;; cant just call -m nrepl.cmdline bc it doesn't start the shadow server!
-                    :exec-fn   kev.dev/dev-repl
-                    :exec-args {:cider-args
-                                ["--middleware"
-                                 "[shadow.cljs.devtools.server.nrepl/middleware,cider.nrepl/cider-middleware]"
-                                 "--interactive" "--color"]}}
-           :roam-db {:exec-fn kev.dev/build-roam-db
-                     :exec-args {:roam-db-path "./docs/db.edn"}}
-           :build {:exec-fn   kev.dev/build
-                   :exec-args {:app          :app
-                               ;; this assumes the we are hosted at /blog
-                               :release-opts {:config-merge [;; for cli compatibility this must be a list
-                                                             {:output-dir   "docs/js"
-                                                              :asset-path   "/roam-viz/js"
-                                                              :build-hooks [(shadow.cljs.build-report/hook
-                                                                             {:output-to "report.html"})]}]}}}}}
+           net.cgrand/xforms                 {:mvn/version "0.19.2"}
+           funcool/promesa                   {:git/url "https://github.com/funcool/promesa"
+                                              :sha     "147c15974484a4f3634e6ad095217806dbb58ee4"}
+           com.wsscode/async                 {:git/url "https://github.com/wilkerlucio/wsscode-async"
+                                              :sha     "163b1cf5c9963d4c798aed4018461abdee754a1d"}
+           com.wsscode/promesa-bridges       {:git/url "https://github.com/wilkerlucio/promesa-bridges"
+                                              :sha     "9439859ef0f517a1b9e453620c0eb72fba896f9e"}
+           lambdaisland/classpath            {:git/url "https://github.com/lambdaisland/classpath"
+                                              :sha     "ff96d4f07d5b12b2fe0d8b206eb4a3713ad222d6"}
+           org.clojure/core.match            {:mvn/version "1.0.1"}
+           ;; db shite
+           com.github.seancorfield/next.jdbc {:mvn/version "1.2.796"}
+           org.xerial/sqlite-jdbc            {:mvn/version "3.39.2.1"}
+           ;; logging?
+           ;; datascript?
+           datascript/datascript             {:git/url "https://github.com/tonsky/datascript"
+                                              :sha     "e8ba04fe790ef162bc3ed953cd033530c5075c40"}}
+ :aliases {:cljs     {:extra-deps {org.clojure/clojurescript {:mvn/version "1.11.60"}
+                                   thheller/shadow-cljs      {:mvn/version "2.26.2"}
+                                   ;; frontend routing
+                                   metosin/reitit-frontend   {:mvn/version "0.5.18"}
+                                   ;; custom chrome formatter. preloaded w/ shadow
+                                   binaryage/devtools        {:mvn/version "1.0.6"}
+                                   ;; push state? routing?
+                                   kibu/pushy                {:mvn/version "0.3.8"}
+                                   ;; libs
+                                   cljs-http/cljs-http       {:mvn/version "0.1.46"}
+                                   re-frame/re-frame         {:mvn/version "1.3.0-rc2"}
+                                   reagent/reagent           {:mvn/version "1.2.0"}}
+                      :main-opts  ["-m" "nrepl.cmdline"
+                                   "--middleware"
+                                   "[shadow.cljs.devtools.server.nrepl/middleware,cider.nrepl/cider-middleware]"
+                                   "--interactive" "--color"]}
+           :build-db {:exec-fn   kev.dev/build-roam-db
+                      :exec-args {:db-out-path  "./public/db.edn"
+                                  :roam-db-path "/Users/kevinkrausse/.config/emacs/.local/cache/org-roam.db"}}
+           :compile  {:exec-fn   kev.dev/build
+                      :exec-args {:app          :app
+                                  ;; this assumes the we are hosted at /blog
+                                  :release-opts {:config-merge [;; for cli compatibility this must be a list
+                                                                {:output-dir  "docs/js"
+                                                                 :asset-path  "/roam-viz/js"
+                                                                 :build-hooks [(shadow.cljs.build-report/hook
+                                                                                {:output-to "report.html"})]}]}}}}}
