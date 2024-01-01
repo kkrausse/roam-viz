@@ -9,7 +9,7 @@
         :asset-path "/js"
         :js-options {:js-provider :shadow}
         :modules    {:main {:init-fn kev.roam.core/init}}
-        :compiler-options {#_#_:output-feature-set :es5
+        :compiler-options {:output-feature-set :es6
                            :optimizations      :simple
                            :externs ["datascript/externs.js"]}
         :devtools   {:http-root "public"

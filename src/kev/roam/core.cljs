@@ -1,5 +1,6 @@
 (ns kev.roam.core
   (:require
+   [datascript.core :as d]
    [reagent.dom :as rdom]
    [re-frame.core :as rf]
    [re-frame.loggers :refer [console]]
@@ -11,14 +12,16 @@
    [kev.roam.node-frontend :as node-frontend]
    [kev.roam.graph :as graph]
    [kev.roam.data]
-   [kev.roam.search :as kev.search]
+   [kev.roam.search :as roam.search]
    ["d3" :as d3]
    ["@mui/material" :as mui]
    ["@mui/material/CssBaseline" :default CssBaseline]
-   ["@mui/material/styles" :refer [createTheme]])
+   ["@mui/material/styles" :refer [createTheme]]
+   [reagent.core :as r])
   (:require-macros
    [kev.roam.util :as util]))
 
+(prn "wat")
 (rf/reg-event-db
  ::route
  (fn [db [_ param]]
@@ -36,8 +39,9 @@
   (createTheme
    (clj->js
     ;; see https://fonts.google.com/ for options
-    {:typography {:fontFamily "Lora" ; note: change index.html to download your font
+    {:typography {:fontFamily "verdana" ; note: change index.html to download your font
                   :fontWeight 400
+                  :fontSize 12
                   :fontStyle "normal"}
      :palette    {:mode       :light
                   #_#_#_#_
@@ -45,29 +49,42 @@
                                :secondary "#7f7f7f"}
                   :background {:default "#2b2525"}}})))
 
-(defn node-page
-  "looks up the node by title (bc that's what we're using as the path parameter)
-  and renders it"
-  [node-title]
-  [:div
-   "this will be the node page"
-   node-title
-   [:a {:href (rfe/href :route/home)}
-    "home"]])
+(defn search-box [roam-db]
+  [roam.search/search-box
+   (->> (d/q '[:find [[pull ?e [:nodes/title :nodes/id :nodes/content]] ...]
+               :where [?e :nodes/title ?title]
+               [?e :nodes/content ?content]]
+             roam-db)
+        (map (fn [{:nodes/keys [title content]}]
+               {:title title
+                :text content
+                :on-select (fn [_]
+                             (console :log "selected" title)
+                             (rfe/push-state :route/node {:title title}))})))] )
 
 (defn app []
-  (let [{{name :name} :data
-         {node-title :title} :path-params :as taco}
-        @(rf/subscribe [::route])
-        kev-db @(rf/subscribe [:kev.roam.data/db])]
-    (condp = name
-      :route/node   [node-frontend/node-page kev-db node-title]
-      :route/graph  [:> mui/Box
-                     {:m 1.5}
-                     [graph/node-graph kev-db]]
-      :route/home   [node-frontend/node-page kev-db "home"]
-      [:div "not found!"])))
+  (let [roam-db @(rf/subscribe [:kev.roam.data/db])]
+    [:div
+     [search-box roam-db]
+     (let [{{name :name}        :data
+            {node-title :title
+             subheading :subheading} :path-params :as taco} @(rf/subscribe [::route])]
+       (condp = name
+         :route/node       [node-frontend/node-page roam-db :node-title node-title]
+         :route/subheading [node-frontend/node-page roam-db
+                            :node-title node-title
+                            :subheading subheading]
+         :route/home       [node-frontend/node-page roam-db :node-title "home"]
+         :route/graph      [:> mui/Box {:m 1.5}
+                            [graph/node-graph roam-db]]
+         [:div "not found!"]))]))
 
+(def functional-compiler (r/create-compiler {:function-components true}))
+
+(comment
+
+  (reitit.frontend.history)
+  )
 (defn ^:dev/after-load render! []
 ;;;  (rf/dispatch-sync [:core/init])
   (-> (kev.roam.data/set-db!)
@@ -75,24 +92,34 @@
 
   (rfe/start!
    (reitit.frontend/router
-    [["/node/:title" {:name   :route/node
-                      :handle #(rf/dispatch [::route %])}]
+    [["/node/:title"
+      {:name   :route/node
+       :handle #(rf/dispatch [::route %])}]
+     ["/node/:title/:subheading"
+      {:name   :route/subheading
+       :handle #(rf/dispatch [::route %])}]
      ["/graph" {:name :route/graph
                 :handle #(rf/dispatch [::route %])}]
      ["/" {:name   :route/home
            :handle #(rf/dispatch [::route %])}]]
-    {:data {}})
+    {:data {}
+     })
    (fn [match _history]
      (some-> match :data :handle (apply [match])))
-   {:use-fragment true})
+   {:use-fragment true
+    :ignore-anchor-click? (fn [& args]
+                            (console :log "ignore anchor click" args)
+                            false)
+    })
 
   (rdom/render
    [:> mui/ThemeProvider
     {:theme theme}
     [:> CssBaseline]
-    [:> mui/Box {:m 2}
+    [:div {:style {:margin (theme.spacing 1)}}
      [app]]]
-   (js/document.querySelector "#app")))
+   (js/document.querySelector "#app")
+   functional-compiler))
 
 (defn ^:export init []
   (re-frame.loggers/set-loggers!

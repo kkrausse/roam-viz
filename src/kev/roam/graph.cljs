@@ -179,24 +179,22 @@ return re_frame.loggers.console.cljs$core$IFn$_invoke$arity$variadic(new cljs.co
   )
 
 (defn node-graph [db]
-  (reagent.core/create-class
-   {:component-did-mount
-    (fn [this]
-      (let [links (->> db
-                       (d/q '[:find [[pull ?e [*]] ...]
-                              :where [?e :link/source _]])
-                       (map remove-ns-keys))
-            nodes (->> db
-                       (d/q '[:find [[pull ?e [:nodes/title :nodes/id :nodes/value]] ...]
-                          :where [?e :nodes/title _]])
-                       (map remove-ns-keys))]
-        (graph-simulation! {:svg (reagent.dom/dom-node this)
-                            :width 2400 :height 1600
-                            :nodes (clj->js nodes)
-                            :links (clj->js links)})))
-    :render (fn []
-              [:svg {"xmlns:xhtml" "http://www.w3.org/1999/xhtml"
-                     "xmlnsXlink" "http://www.w3.org/1999/xlink"
-                     :version "1.1"
-                     :xmlns "http://www.w3.org/2000/svg"
-                     :style {:width "100%" :height "auto"}}])}))
+  []
+  [:svg {"xmlns:xhtml" "http://www.w3.org/1999/xhtml"
+         "xmlnsXlink"  "http://www.w3.org/1999/xlink"
+         :version      "1.1"
+         :xmlns        "http://www.w3.org/2000/svg"
+         :style        {:width "100%" :height "auto"}
+         :ref          (fn [el]
+                         (let [links (->> db
+                                          (d/q '[:find [[pull ?e [*]] ...]
+                                                 :where [?e :link/source _]])
+                                          (map remove-ns-keys))
+                               nodes (->> db
+                                          (d/q '[:find [[pull ?e [:nodes/title :nodes/id :nodes/value]] ...]
+                                                 :where [?e :nodes/title _]])
+                                          (map remove-ns-keys))]
+                           (graph-simulation! {:svg   el
+                                               :width 2400 :height 1600
+                                               :nodes (clj->js nodes)
+                                               :links (clj->js links)})))}])

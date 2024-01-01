@@ -45,11 +45,37 @@
         attr
         value)))
 
+(defn find-top-node [db node-id]
+  (first
+   (d/q '[:find [[pull ?e [*]]]
+          :in $ ?id
+          :where
+          [?this-e :nodes/id ?id]
+          [?this-e :nodes/file ?file]
+          [?e :nodes/file ?file]
+          [?e :nodes/level 0]]
+        db
+        node-id)))
+
 (comment
 
-  (d/q '[:find [[pull ?e [:nodes/title :nodes/id :nodes/properties]] ...]
-         :where [?e :nodes/title _]]
-       db)
+  (-> '[:find [[pull ?e [*] #_[:nodes/title :nodes/id :nodes/properties]] #_...]
+        :where
+        [?e :nodes/title _]
+        [?e :nodes/properties ?p]
+        [?e :nodes/title "ai papers TODO"]]
+      (d/q db)
+      first
+      (->>
+       ;; :nodes/id
+       ;; (find-top-node db)
+       (remove (fn [[k v]]
+                 (or (= "" v)
+                     (= k :nodes/content))))
+       (into {}
+         ))
+      ;(map first)
+      )
 
   (set-db!)
 

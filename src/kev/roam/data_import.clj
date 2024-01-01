@@ -1,13 +1,10 @@
 (ns kev.roam.data-import
   (:require
-   [org-parser.parser :as org-parser]
    [next.jdbc :as jdbc]
    [clojure.set :as set]
    [clojure.math :as math]
    [datascript.core :as d]
    ))
-
-(def jdbc-url "jdbc:sqlite:/Users/kevinkrausse/.emacs.d/.local/cache/org-roam.db")
 
 ;; TODO: how can we make this extensible to others' configurations?
 ;; maybe they want a custom query
@@ -85,8 +82,8 @@ AND (links.dest != '\"id\"' OR links.dest in (select id from usable_nodes))
 (defn roam-file-name->time-string [fname]
   (second (re-matches #".*/(\d{14})-.*" fname)))
 
-(defn ->nodes+links []
-  (let [links+source (all-links-with-source-nodes jdbc-url)
+(defn ->nodes+links [roam-jdbc-url]
+  (let [links+source (all-links-with-source-nodes roam-jdbc-url)
         nodes (->> links+source
                    (filter (comp some? :nodes/id))
                    (map (fn [{id :nodes/id :as x}]
@@ -138,18 +135,23 @@ AND (links.dest != '\"id\"' OR links.dest in (select id from usable_nodes))
   :node/{created|value|content|title|id}
   :link/{source|target}
   This will be used by the UI to make the site"
-  [output-path]
-  (let [[nodes links] (->nodes+links)]
+  [output-path roam-db-path]
+  (let [[nodes links] (->nodes+links
+                       (str "jdbc:sqlite:" roam-db-path))]
     (spit output-path
           (-> (d/empty-db)
               (d/db-with
                (into []
-                     (map #(select-keys (second %)
-                                        [:nodes/content
-                                         :nodes/id
-                                         :nodes/title
-                                         :nodes/value
-                                         :nodes/properties]))
+                 (map #(-> %
+                           (second)
+                           (update-vals (fnil identity ""))
+                           #_
+                           (select-keys
+                                     [:nodes/content
+                                      :nodes/id
+                                      :nodes/title
+                                      :nodes/value
+                                      :nodes/properties])))
                      nodes))
               (d/db-with
                (into []
@@ -174,7 +176,6 @@ AND (links.dest != '\"id\"' OR links.dest in (select id from usable_nodes))
                                     [title (slurp file)]))
                              nodes)]
     `(def ~'node-title->content ~title->content)))
-
 
 (comment
 
