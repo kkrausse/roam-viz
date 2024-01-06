@@ -1,9 +1,10 @@
 transform local org-roam database into a nice website!
 
-** running
+** instructions
 - repl: cider-jack-in-clj&cljs =clj -M:cljs=
-- build dev roam db:
-  - =clj -X:build-db=  override by adding =:roam-db-path '"/path/to/your/org-roam.db"'= path.
+- build roam db:
+  - =clj -X:build-db= will default to dev path in =public/= and my personal roam db path.
+    - override to your db by adding =:roam-db-path '"/path/to/your/org-roam.db"'= path.
 - build prod db & compile cljs:
   #+begin_src bash
 clj -X:build-db :db-out-path '"./docs/db.edn"'
@@ -84,13 +85,21 @@ clj -X:cljs:compile
       (:foreign-key [source] :references nodes [id] :on-delete :cascade)))))
 #+end_src
 ** todo
-- [ ] various org features
+- [ ] be able to link to arbitrary stuff
+  - such as
+    - locations of links to other node files (so backlinks can point there)
+    - arbitrary subheadings (for table of contents)
+- [ ] table of contents for big pages?
+  - idk this may not work bc I change stuff around so much.
+    Can generate id's for nodes, but this might be a little annoying.
+- [ ] fix search slowness
+- [ ] hover over org links should preview the ref.
+- [-] various org features
   - make max-width for post text. Look at blog for doing this.
-  - code sections
+  - [ ] code sections
   - [X] block quotes
-- [ ] make reusable for other people's roam graphs
-- [ ] see https://github.com/d3/d3-force/blob/v3.0.0/README.md#forceSimulation
-  to simulate collision? (like an imaginary ring surrounding the circles)
+- [X] Make more similar to local emacs experience by changing font weight and size on headings rather than using :h1 :h2... The indentation level should convey the size anyways.
+- [X] make reusable for other people's roam graphs
 - [X] parse org files into posts. Router for posts.
   - tried doing the existing parser. This didn't work.
 - [X] noticed that "sibo" node didn't show in graph. Are nodes w/ no links being evicted?

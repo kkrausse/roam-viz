@@ -82,7 +82,9 @@ AND (links.dest != '\"id\"' OR links.dest in (select id from usable_nodes))
 (defn roam-file-name->time-string [fname]
   (second (re-matches #".*/(\d{14})-.*" fname)))
 
-(defn ->nodes+links [roam-jdbc-url]
+(defn ->nodes+links
+  "returns a map of id->node and set of links"
+  [roam-jdbc-url]
   (let [links+source (all-links-with-source-nodes roam-jdbc-url)
         nodes (->> links+source
                    (filter (comp some? :nodes/id))
@@ -142,17 +144,11 @@ AND (links.dest != '\"id\"' OR links.dest in (select id from usable_nodes))
           (-> (d/empty-db)
               (d/db-with
                (into []
-                 (map #(-> %
-                           (second)
-                           (update-vals (fnil identity ""))
-                           #_
-                           (select-keys
-                                     [:nodes/content
-                                      :nodes/id
-                                      :nodes/title
-                                      :nodes/value
-                                      :nodes/properties])))
-                     nodes))
+                 (map (fn [[_ {:nodes/keys [pos] :as n}]]
+                        (-> n
+                            (update-vals (fnil identity ""))
+                            (cond-> (< 10 pos) (dissoc :nodes/content)))))
+                 nodes))
               (d/db-with
                (into []
                      (map (fn [v]

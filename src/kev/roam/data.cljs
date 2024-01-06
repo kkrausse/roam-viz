@@ -76,6 +76,29 @@
          ))
       ;(map first)
       )
+  (comment
+    {:nodes/value 16.399002343416214,
+     :nodes/title "ai papers TODO",
+     :nodes/id "7aac1502-aa69-499a-a52d-2959813c5b0e",
+     :links/pos 826,
+     :links/dest "\"c7d53411-bd15-4dec-9750-fee92d5d3040\"",
+     :nodes/properties
+     {"CATEGORY" "20231217202058-ai_papers",
+      "ID" "7aac1502-aa69-499a-a52d-2959813c5b0e",
+      "BLOCKED" "",
+      "FILE"
+      "/Users/kevinkrausse/Documents/worknotes/org-roam/20231217202058-ai_papers.org",
+      "PRIORITY" "B",
+      "ITEM" "ai papers TODO"},
+     :nodes/created-time "20231217202058",
+     :links/type "\"id\"",
+     :links/properties "(:outline (\"ai papers TODO\"))",
+     :links/source "\"7aac1502-aa69-499a-a52d-2959813c5b0e\"",
+     :db/id 63,
+     :nodes/file
+     "/Users/kevinkrausse/Documents/worknotes/org-roam/20231217202058-ai_papers.org",
+     :nodes/pos 449,
+     :nodes/level 1})
 
   (set-db!)
 
